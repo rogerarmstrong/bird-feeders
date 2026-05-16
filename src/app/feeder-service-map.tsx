@@ -12,7 +12,7 @@ const MAP_MIN_ZOOM = 11;
 const MAP_MAX_ZOOM = 17;
 const MAP_FIT_WIDTH = 720;
 const MAP_FIT_HEIGHT = 260;
-const MAP_INITIAL_ZOOM_OFFSET = 2;
+const MAP_INITIAL_ZOOM_OFFSET = 1;
 
 type MapFeeder = {
   id: string;

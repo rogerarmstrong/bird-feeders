@@ -87,11 +87,10 @@ export default async function DashboardPage() {
               Bird feeder monitoring center
             </p>
             <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">
-              Monitor every feeder from seed level to species activity.
+              University bird-feeder monitoring project
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/75 sm:text-lg">
-              Track visits, feed consumption, cleaning recency, and device health from one
-              responsive dashboard that is ready for real telemetry.
+              Track feed level and cleaning of feeders
             </p>
           </div>
           <div className="rounded-3xl bg-white/10 p-5">
