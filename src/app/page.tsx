@@ -170,7 +170,7 @@ export default async function DashboardPage() {
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
             <p className="mb-3 inline-flex rounded-full bg-white/10 px-3 py-1 text-sm font-medium">
-              Backyard habitat command center
+              Bird feeder monitoring center
             </p>
             <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">
               Monitor every feeder from seed level to species activity.
