@@ -11,6 +11,7 @@ import { getDashboardMetrics } from "@/lib/monitoring";
 import { formatPercent, formatRelativeTime } from "@/lib/format";
 import { requireSession } from "@/lib/session";
 import { FeederServiceMap } from "@/app/feeder-service-map";
+import { buildInfo } from "@/generated/build-info";
 
 export const dynamic = "force-dynamic";
 
@@ -83,9 +84,14 @@ export default async function DashboardPage() {
       <section className="overflow-hidden rounded-[2rem] bg-canopy p-6 text-white shadow-xl shadow-canopy/10 sm:p-8">
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
-            <p className="mb-3 inline-flex rounded-full bg-white/10 px-3 py-1 text-sm font-medium">
-              Bird feeder monitoring center
-            </p>
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <p className="inline-flex rounded-full bg-white/10 px-3 py-1 text-sm font-medium">
+                Bird feeder monitoring center
+              </p>
+              <p className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/70">
+                Version {buildInfo.buildNumber}
+              </p>
+            </div>
             <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">
               University bird-feeder monitoring project
             </h1>
