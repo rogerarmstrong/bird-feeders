@@ -57,6 +57,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
         id: params.id
       },
       include: {
+        assignedUser: true,
         measurements: {
           orderBy: {
             measuredAt: "desc"
@@ -156,6 +157,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
       id: params.id
     },
     include: {
+      assignedUser: true,
       measurements: {
         orderBy: {
           measuredAt: "desc"

@@ -15,6 +15,8 @@ type Snapshot = {
   cleanStatus?: string;
   fillStatus?: string;
   assignedUserId?: string | null;
+  assignedUser?: string | null;
+  assignedUserEmail?: string | null;
   latestFillPercent?: number;
   latestWeightGrams?: number;
 };
@@ -38,7 +40,23 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
-function formatSnapshot(snapshot: Snapshot | null) {
+function assignedUserEmail(snapshot: Snapshot, usersById: Map<string, string>) {
+  if (snapshot.assignedUserEmail) {
+    return snapshot.assignedUserEmail;
+  }
+
+  if (snapshot.assignedUserId) {
+    return usersById.get(snapshot.assignedUserId) ?? "Unknown user";
+  }
+
+  if (snapshot.assignedUser?.includes("@")) {
+    return snapshot.assignedUser;
+  }
+
+  return "Unassigned";
+}
+
+function formatSnapshot(snapshot: Snapshot | null, usersById: Map<string, string>) {
   if (!snapshot) {
     return "None";
   }
@@ -50,6 +68,7 @@ function formatSnapshot(snapshot: Snapshot | null) {
     `Capacity: ${snapshot.capacityGrams ?? "N/A"} g`,
     `Clean status: ${snapshot.cleanStatus ?? "N/A"}`,
     `Fill status: ${snapshot.fillStatus ?? "N/A"}`,
+    `Assigned user: ${assignedUserEmail(snapshot, usersById)}`,
     `Latest fill: ${snapshot.latestFillPercent ?? "N/A"}%`,
     `Latest weight: ${snapshot.latestWeightGrams ?? "N/A"} g`,
     `Notes: ${snapshot.notes || "None"}`
@@ -71,6 +90,33 @@ async function buildPdfBuffer(): Promise<Buffer> {
       changedByUser: true
     }
   });
+  const snapshots = entries.flatMap((entry) => [
+    parseSnapshot(entry.beforeJson),
+    parseSnapshot(entry.afterJson)
+  ]);
+  const assignedUserIds = Array.from(
+    new Set(
+      snapshots
+        .map((snapshot) => snapshot?.assignedUserId)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+  const assignedUsers = assignedUserIds.length
+    ? await prisma.user.findMany({
+        where: {
+          id: {
+            in: assignedUserIds
+          }
+        },
+        select: {
+          id: true,
+          email: true
+        }
+      })
+    : [];
+  const usersById = new Map(
+    assignedUsers.flatMap((user) => (user.email ? [[user.id, user.email]] : []))
+  );
 
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 48, size: "A4" });
@@ -99,8 +145,8 @@ async function buildPdfBuffer(): Promise<Buffer> {
     entries.forEach((entry, index) => {
       addPageIfNeeded(doc, 180);
 
-      const before = parseSnapshot(entry.beforeJson);
-      const after = parseSnapshot(entry.afterJson);
+      const before = snapshots[index * 2];
+      const after = snapshots[index * 2 + 1];
       const changedBy = entry.changedByUser?.name ?? entry.changedByUser?.email ?? "Unknown user";
 
       doc
@@ -118,15 +164,15 @@ async function buildPdfBuffer(): Promise<Buffer> {
 
       if (entry.action === "UPDATE") {
         doc.fontSize(10).fillColor("#173f35").text("Before", { underline: true });
-        doc.fontSize(9).fillColor("#253f37").text(formatSnapshot(before));
+        doc.fontSize(9).fillColor("#253f37").text(formatSnapshot(before, usersById));
         doc.moveDown(0.35);
         doc.fontSize(10).fillColor("#173f35").text("After", { underline: true });
-        doc.fontSize(9).fillColor("#253f37").text(formatSnapshot(after));
+        doc.fontSize(9).fillColor("#253f37").text(formatSnapshot(after, usersById));
       } else {
         doc.fontSize(10).fillColor("#173f35").text(entry.action === "DELETE" ? "Deleted feeder" : "Created feeder", {
           underline: true
         });
-        doc.fontSize(9).fillColor("#253f37").text(formatSnapshot(after ?? before));
+        doc.fontSize(9).fillColor("#253f37").text(formatSnapshot(after ?? before, usersById));
       }
 
       doc.moveDown(1);

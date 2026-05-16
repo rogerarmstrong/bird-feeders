@@ -1,8 +1,9 @@
-import type { Feeder, FeedMeasurement, Prisma } from "@prisma/client";
+import type { Feeder, FeedMeasurement, Prisma, User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 type FeederWithMeasurement = Feeder & {
   measurements?: FeedMeasurement[];
+  assignedUser?: Pick<User, "email"> | null;
 };
 
 type HistoryClient = typeof prisma | Prisma.TransactionClient;
@@ -13,6 +14,7 @@ export function feederHistorySnapshot(feeder: FeederWithMeasurement | null) {
   }
 
   const latestMeasurement = feeder.measurements?.[0];
+  const assignedUserEmail = feeder.assignedUser?.email ?? null;
 
   return {
     id: feeder.id,
@@ -25,6 +27,7 @@ export function feederHistorySnapshot(feeder: FeederWithMeasurement | null) {
     cleanStatus: feeder.cleanStatus,
     fillStatus: feeder.fillStatus,
     assignedUserId: feeder.assignedUserId,
+    assignedUserEmail,
     lastCleanedAt: feeder.lastCleanedAt,
     latestFillPercent: latestMeasurement?.fillPercent,
     latestWeightGrams: latestMeasurement?.weightGrams
