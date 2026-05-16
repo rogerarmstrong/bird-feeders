@@ -51,13 +51,24 @@ export async function recordFeederHistory(
     after?: unknown;
   }
 ) {
+  const changedByUser = changedByUserId
+    ? await client.user.findUnique({
+        where: {
+          id: changedByUserId
+        },
+        select: {
+          id: true
+        }
+      })
+    : null;
+
   await client.feederHistory.create({
     data: {
       action,
       feederId,
       feederName,
       summary,
-      changedByUserId,
+      changedByUserId: changedByUser?.id,
       beforeJson: before ? JSON.stringify(before) : null,
       afterJson: after ? JSON.stringify(after) : null
     }

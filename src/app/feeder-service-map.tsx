@@ -12,6 +12,7 @@ const MAP_MIN_ZOOM = 11;
 const MAP_MAX_ZOOM = 17;
 const MAP_FIT_WIDTH = 720;
 const MAP_FIT_HEIGHT = 260;
+const MAP_INITIAL_ZOOM_OFFSET = 2;
 
 type MapFeeder = {
   id: string;
@@ -140,7 +141,10 @@ function formatStatus(status: string) {
 
 export function FeederServiceMap({ feeders }: FeederServiceMapProps) {
   const bounds = useMemo(() => getMapBounds(feeders), [feeders]);
-  const fittedZoom = useMemo(() => chooseMapZoom(bounds), [bounds]);
+  const fittedZoom = useMemo(
+    () => Math.min(MAP_MAX_ZOOM, chooseMapZoom(bounds) + MAP_INITIAL_ZOOM_OFFSET),
+    [bounds]
+  );
   const [zoom, setZoom] = useState(fittedZoom);
   const centerLat = (bounds.minLat + bounds.maxLat) / 2;
   const centerLng = (bounds.minLng + bounds.maxLng) / 2;
