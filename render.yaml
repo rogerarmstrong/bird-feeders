@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: bird-feeders
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npm run db:deploy && npm run start
+    healthCheckPath: /auth/sign-in
+    disk:
+      name: bird-feeders-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.1
+      - key: DATABASE_URL
+        value: file:/var/data/dev.db
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: APPLE_CLIENT_ID
+        sync: false
+      - key: APPLE_CLIENT_SECRET
+        sync: false

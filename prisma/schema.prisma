@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  accounts      Account[]
+  sessions      Session[]
+  assignedFeeders Feeder[]
+  feederHistoryEntries FeederHistory[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Feeder {
+  id            String            @id @default(cuid())
+  name          String
+  location      String
+  latitude      Float?
+  longitude     Float?
+  capacityGrams Int
+  notes         String            @default("")
+  lastCleanedAt DateTime          @default(now())
+  cleanStatus   String            @default("CLEAN")
+  fillStatus    String            @default("FILLED")
+  assignedUserId String?
+  assignedUser   User?            @relation(fields: [assignedUserId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  device        Device?
+  visits        Visit[]
+  measurements  FeedMeasurement[]
+  alerts        Alert[]
+  history       FeederHistory[]
+}
+
+model FeederHistory {
+  id              String   @id @default(cuid())
+  feederId        String?
+  feederName      String
+  action          String
+  summary         String
+  beforeJson      String?
+  afterJson       String?
+  changedByUserId String?
+  changedAt       DateTime @default(now())
+  feeder          Feeder?  @relation(fields: [feederId], references: [id], onDelete: SetNull)
+  changedByUser   User?    @relation(fields: [changedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([changedAt])
+  @@index([feederId])
+}
+
+model Device {
+  id             String       @id @default(cuid())
+  feederId       String       @unique
+  serialNumber   String       @unique
+  status         String       @default("ONLINE")
+  lastSeenAt     DateTime
+  feeder         Feeder       @relation(fields: [feederId], references: [id], onDelete: Cascade)
+}
+
+model Visit {
+  id              String   @id @default(cuid())
+  feederId        String
+  species         String
+  count           Int      @default(1)
+  confidence      Float
+  durationSeconds Int
+  imageUrl        String?
+  observedAt      DateTime
+  feeder          Feeder   @relation(fields: [feederId], references: [id], onDelete: Cascade)
+
+  @@index([feederId, observedAt])
+}
+
+model FeedMeasurement {
+  id          String   @id @default(cuid())
+  feederId    String
+  fillPercent Int
+  weightGrams Int
+  measuredAt  DateTime
+  feeder      Feeder   @relation(fields: [feederId], references: [id], onDelete: Cascade)
+
+  @@index([feederId, measuredAt])
+}
+
+model Alert {
+  id         String        @id @default(cuid())
+  feederId   String
+  type       String
+  severity   String
+  message    String
+  resolved   Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  resolvedAt DateTime?
+  feeder     Feeder        @relation(fields: [feederId], references: [id], onDelete: Cascade)
+
+  @@index([feederId, resolved])
+}
